@@ -37,8 +37,8 @@ export const createProduct = async (req, res) => {
       percentage_discount,
       product_images: images,
       product_videos: videos,
-      categories: categories ? JSON.parse(categories) : [],
-      brands: brands ? JSON.parse(brands) : []
+      categories: parsedCategories,
+      brands: parsedBrands,
     });
 
     res.status(201).json({ success: true, product });
