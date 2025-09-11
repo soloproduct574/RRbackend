@@ -7,7 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 // custom modules
-import connectDb from "../backend_server/src/configs/db.js";          // your MongoDB connection file
+import connectDb from "./src/configs/db.js";          // your MongoDB connection file
 import allRoutes from "./app.js";
 
 dotenv.config(); // load env vars
