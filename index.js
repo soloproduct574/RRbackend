@@ -16,26 +16,39 @@ const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+
+// ✅ Allowed origins list
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://r-rfrontend.vercel.app",
+];
 
 // ---------- MIDDLEWARE ----------
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.warn("❌ CORS blocked for origin:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(helmet());
-if (process.env.NODE_ENV !== "production") {
-  app.use(morgan("dev"));
-}
-
-// ✅ Only parse JSON if content-type is application/json
-app.use((req, res, next) => {
-  if (req.headers["content-type"]?.startsWith("application/json")) {
-    return express.json()(req, res, next);
-  }
-  return next();
-});
-
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ---------- DB ----------
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev")); // logging
+}
+
 connectDb();
 
 // ---------- ROUTES ----------
@@ -48,8 +61,9 @@ app.get("/", (req, res) => {
 // ---------- SOCKET.IO ----------
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 

@@ -3,13 +3,12 @@ import authrouter from './src/routes/auth/userRoutes.js'
 import productrouter from './src/routes/productRoutes/productRoutes.js'
 import adminrouter from './src/routes/auth/adminRoutes.js'
 import authAdminProductRoutes from './src/routes/auth/adminRoutesProduect.js'
-import mediaRouter from './src/routes/media/mediaRoutes.js'
+import mediaHandler from "./src/routes/productRoutes/productMediaHandleRoutes.js"
 const router = express.Router()
 
 router.use("/auth", authrouter)
 router.use("/products", productrouter)
 router.use("/auth/admin/", adminrouter)
 router.use("/auth/admin/protect",authAdminProductRoutes)
-router.use("/media",mediaRouter)
-
-export default router;
+router.use("/media",mediaHandler)
+export default router

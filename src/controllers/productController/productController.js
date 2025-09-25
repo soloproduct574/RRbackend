@@ -7,7 +7,7 @@ console.log("Product Controller Loaded",uploadFileToR2);
  */
 export const createProduct = async (req, res) => {
   try {
-    const { product_name, description, original_price, offer_price, categories, brands } = req.body;
+    const { product_name, description, original_price, offer_price, categories } = req.body;
 
     // Auto calculate discount
     const percentage_discount = Math.round(((original_price - offer_price) / original_price) * 100);
@@ -38,7 +38,6 @@ export const createProduct = async (req, res) => {
       product_images: images,
       product_videos: videos,
       categories: parsedCategories,
-      brands: parsedBrands,
     });
 
     res.status(201).json({ success: true, product });
@@ -76,7 +75,7 @@ export const updateProduct = async (req, res) => {
     let product = await Product.findById(id);
     if (!product) return res.status(404).json({ success: false, message: "Not found" });
 
-    const { product_name, description, original_price, offer_price, categories, brands } = req.body;
+    const { product_name, description, original_price, offer_price, categories } = req.body;
 
     let images = product.product_images;
     let videos = product.product_videos;
@@ -107,7 +106,7 @@ export const updateProduct = async (req, res) => {
       product_images: images,
       product_videos: videos,
       categories: categories ? JSON.parse(categories) : product.categories,
-      brands: brands ? JSON.parse(brands) : product.brands
+      // brands: brands ? JSON.parse(brands) : product.brands
     });
 
     await product.save();
