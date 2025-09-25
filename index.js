@@ -7,29 +7,36 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 // custom modules
-import connectDb from "../backend_server/src/configs/db.js";          // your MongoDB connection file
+import connectDb from "./src/configs/db.js";
 import allRoutes from "./app.js";
 
-dotenv.config(); // load env vars
+dotenv.config();
 
-// ---------- INIT ----------
 const app = express();
 const server = http.createServer(app);
+
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
 // ---------- MIDDLEWARE ----------
-app.use(cors({
-  origin: CLIENT_URL,
-  credentials: true,
-}));
-app.use(helmet());               // security headers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(helmet());
 if (process.env.NODE_ENV !== "production") {
-  app.use(morgan("dev")); // request logging
+  app.use(morgan("dev"));
 }
-connectDb(); // connect to database
+
+// ✅ Only parse JSON if content-type is application/json
+app.use((req, res, next) => {
+  if (req.headers["content-type"]?.startsWith("application/json")) {
+    return express.json()(req, res, next);
+  }
+  return next();
+});
+
+app.use(express.urlencoded({ extended: true }));
+
+// ---------- DB ----------
+connectDb();
 
 // ---------- ROUTES ----------
 app.use("/api", allRoutes);
@@ -42,16 +49,14 @@ app.get("/", (req, res) => {
 const io = new Server(server, {
   cors: {
     origin: CLIENT_URL,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
 io.on("connection", (socket) => {
   console.log("🔌 User connected:", socket.id);
 
-  // example listener
   socket.on("message", (data) => {
-    console.log("📩 Received:", data);
     socket.broadcast.emit("message", data);
   });
 
