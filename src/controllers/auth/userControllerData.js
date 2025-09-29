@@ -21,13 +21,15 @@ const generateRefreshToken = (id) => {
   );
 };
 
-// ================= REGISTER =================
-export const registerUser = async (req, res) => {
-  try {
-    const { fullName, mobileNumber, email, password } = req.body;
 
-    // ✅ Check required fields
-    if (!fullName || !mobileNumber || !email || !password) {
+// ================= REGISTER =================
+export const 
+registerUser = async (req, res) => {
+  try {
+    const { fullName, mobileNumber, email } = req.body;
+
+    // ✅ Check required fields (only the ones you actually need)
+    if (!fullName || !mobileNumber || !email) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -37,21 +39,16 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // ✅ Create the user
+    // ✅ Create the user (without password)
     const newUser = await User.create({
       fullName,
       mobileNumber,
       email,
-      password,
     });
 
-    // ✅ Generate tokens
+    // ✅ Generate tokens (optional - if you still want authentication without passwords)
     const accessToken = generateAccessToken(newUser._id);
     const refreshToken = generateRefreshToken(newUser._id);
-
-    // Optionally store refresh token in DB or Redis -> so you can revoke sessions
-    // newUser.refreshToken = refreshToken;
-    // await newUser.save();
 
     res.status(201).json({
       success: true,
@@ -69,6 +66,15 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Register Error:", error);
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ 
+        message: `${field} already exists` 
+      });
+    }
+    
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -116,6 +122,45 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+// ================= GET ALL USERS =================
+export const getAllUsers = async (req, res) => {
+  try {
+    // Exclude password field (safe even if it doesn't exist)
+    const users = await User.find().select("-password");
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("❌ Get Users Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// ================= GET USER BY ID =================
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error("❌ Get User Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
 
 // ================= REFRESH TOKEN =================
 export const refreshAccessToken = async (req, res) => {
