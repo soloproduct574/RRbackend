@@ -76,49 +76,195 @@ export const updateProduct = async (req, res) => {
     let product = await Product.findById(id);
     if (!product) return res.status(404).json({ success: false, message: "Not found" });
 
-    const { product_name, description, original_price, offer_price, categories, brands } = req.body;
+    console.log("Request body:", JSON.stringify(req.body));
 
-    let images = product.product_images;
-    let videos = product.product_videos;
+    // Handle standard fields first
+    if (req.body.product_name !== undefined) product.product_name = req.body.product_name;
+    if (req.body.description !== undefined) product.description = req.body.description;
+    if (req.body.original_price !== undefined) product.original_price = Number(req.body.original_price);
+    if (req.body.offer_price !== undefined) product.offer_price = Number(req.body.offer_price);
+    if (req.body.percentage_discount !== undefined) product.percentage_discount = Number(req.body.percentage_discount);
 
-    if (req.files?.images) {
-      for (const file of req.files.images) {
-        const urls = await uploadFileToR2(file.path, file.mimetype);
-        images.push(...urls);
+    // Handle arrays that don't need special formatting
+    if (req.body.product_images) {
+      if (Array.isArray(req.body.product_images)) {
+        product.product_images = req.body.product_images;
+      } else if (typeof req.body.product_images === 'string') {
+        try {
+          product.product_images = JSON.parse(req.body.product_images);
+        } catch (e) {
+          console.log("Error parsing product_images:", e);
+        }
+      }
+    }
+    
+    if (req.body.product_videos) {
+      if (Array.isArray(req.body.product_videos)) {
+        product.product_videos = req.body.product_videos;
+      } else if (typeof req.body.product_videos === 'string') {
+        try {
+          product.product_videos = JSON.parse(req.body.product_videos);
+        } catch (e) {
+          console.log("Error parsing product_videos:", e);
+        }
       }
     }
 
-    if (req.files?.videos) {
-      for (const file of req.files.videos) {
-        const urls = await uploadFileToR2(file.path, file.mimetype);
-        videos.push(...urls);
+    // ===== CRITICAL FIX FOR CATEGORIES =====
+    if (req.body.categories) {
+      // Create a completely new array
+      const newCategories = [];
+      
+      // Convert to object based on type
+      if (typeof req.body.categories === 'string') {
+        try {
+          // First try to parse it as JSON
+          const parsed = JSON.parse(req.body.categories);
+          
+          if (Array.isArray(parsed)) {
+            // It's a JSON array
+            parsed.forEach(cat => {
+              if (typeof cat === 'string') {
+                newCategories.push({ name: cat });
+              } else if (cat && cat.name) {
+                newCategories.push({ name: cat.name });
+              }
+            });
+          } else {
+            // It's a single value
+            newCategories.push({ name: String(parsed) });
+          }
+        } catch (e) {
+          // It's a regular string, not JSON
+          newCategories.push({ name: req.body.categories });
+        }
+      } else if (Array.isArray(req.body.categories)) {
+        // It's already an array
+        req.body.categories.forEach(cat => {
+          if (typeof cat === 'string') {
+            newCategories.push({ name: cat });
+          } else if (cat && cat.name) {
+            newCategories.push({ name: cat.name });
+          }
+        });
+      }
+      
+      // Important: Directly replace the categories array
+      product.categories = newCategories;
+      console.log("Final categories:", newCategories);
+    }
+
+    // ===== CRITICAL FIX FOR BRANDS =====
+    if (req.body.brands) {
+      // Create a completely new array
+      const newBrands = [];
+      
+      // Convert to object based on type
+      if (typeof req.body.brands === 'string') {
+        try {
+          // First try to parse it as JSON
+          const parsed = JSON.parse(req.body.brands);
+          
+          if (Array.isArray(parsed)) {
+            // It's a JSON array
+            parsed.forEach(brand => {
+              if (typeof brand === 'string') {
+                newBrands.push({ name: brand });
+              } else if (brand && brand.name) {
+                newBrands.push({ name: brand.name });
+              }
+            });
+          } else {
+            // It's a single value
+            newBrands.push({ name: String(parsed) });
+          }
+        } catch (e) {
+          // It's a regular string, not JSON
+          newBrands.push({ name: req.body.brands });
+        }
+      } else if (Array.isArray(req.body.brands)) {
+        // It's already an array
+        req.body.brands.forEach(brand => {
+          if (typeof brand === 'string') {
+            newBrands.push({ name: brand });
+          } else if (brand && brand.name) {
+            newBrands.push({ name: brand.name });
+          }
+        });
+      }
+      
+      // Important: Directly replace the brands array
+      product.brands = newBrands;
+      console.log("Final brands:", newBrands);
+    }
+
+    // Handle file uploads
+    if (req.files) {
+      // Handle image uploads
+      if (req.files.images && req.files.images.length > 0) {
+        const newImages = [];
+        for (const file of req.files.images) {
+          try {
+            const urls = await uploadFileToR2(file.path, file.mimetype);
+            newImages.push(...urls);
+          } catch (error) {
+            console.error("Error uploading image:", error);
+          }
+        }
+        
+        // Combine with existing images
+        if (newImages.length > 0) {
+          if (!product.product_images || !Array.isArray(product.product_images)) {
+            product.product_images = [];
+          }
+          product.product_images = [...product.product_images, ...newImages];
+        }
+      }
+      
+      // Handle video uploads
+      if (req.files.videos && req.files.videos.length > 0) {
+        const newVideos = [];
+        for (const file of req.files.videos) {
+          try {
+            const urls = await uploadFileToR2(file.path, file.mimetype);
+            newVideos.push(...urls);
+          } catch (error) {
+            console.error("Error uploading video:", error);
+          }
+        }
+        
+        // Combine with existing videos
+        if (newVideos.length > 0) {
+          if (!product.product_videos || !Array.isArray(product.product_videos)) {
+            product.product_videos = [];
+          }
+          product.product_videos = [...product.product_videos, ...newVideos];
+        }
       }
     }
 
-    // update fields
-    product.set({
-      product_name: product_name || product.product_name,
-      description: description || product.description,
-      original_price: original_price || product.original_price,
-      offer_price: offer_price || product.offer_price,
-      percentage_discount: (original_price && offer_price)
-        ? Math.round(((original_price - offer_price) / original_price) * 100)
-        : product.percentage_discount,
-      product_images: images,
-      product_videos: videos,
-      categories: categories ? JSON.parse(categories) : product.categories,
-      brands: brands ? JSON.parse(brands) : product.brands
+    // Save with validation
+    const updatedProduct = await product.save();
+    console.log("Product updated successfully");
+
+    return res.json({
+      success: true,
+      message: "Product updated successfully",
+      product: updatedProduct
     });
 
-    await product.save();
-
-    res.json({ success: true, product });
-
   } catch (err) {
-    console.error("❌ Update error", err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error("❌ Update error:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: err.message
+    });
   }
 };
+
+
+
+
 
 /**
  * DELETE product
