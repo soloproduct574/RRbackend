@@ -7,7 +7,7 @@ console.log("Product Controller Loaded",uploadFileToR2);
  */
 export const createProduct = async (req, res) => {
   try {
-    const { product_name, description, original_price, offer_price, categories, brands } = req.body;
+    const { product_name, description, original_price, offer_price, categories } = req.body;
 
     // Auto calculate discount
     const percentage_discount = Math.round(((original_price - offer_price) / original_price) * 100);
@@ -37,8 +37,7 @@ export const createProduct = async (req, res) => {
       percentage_discount,
       product_images: images,
       product_videos: videos,
-      categories: categories ? JSON.parse(categories) : [],
-      brands: brands ? JSON.parse(brands) : []
+      categories: parsedCategories,
     });
 
     res.status(201).json({ success: true, product });

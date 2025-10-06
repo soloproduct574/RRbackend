@@ -10,11 +10,11 @@ import morgan from "morgan";
 import connectDb from "./src/configs/db.js";
 import allRoutes from "./app.js";
 
-dotenv.config(); // load env vars
+dotenv.config();
 
-// ---------- INIT ----------
 const app = express();
 const server = http.createServer(app);
+
 const PORT = process.env.PORT || 5000;
 
 // ✅ Allowed origins list
@@ -71,7 +71,6 @@ io.on("connection", (socket) => {
   console.log("🔌 User connected:", socket.id);
 
   socket.on("message", (data) => {
-    console.log("📩 Received:", data);
     socket.broadcast.emit("message", data);
   });
 

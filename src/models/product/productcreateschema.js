@@ -26,9 +26,9 @@ const ProductSchema = new mongoose.Schema({
     { name: { type: String, required: true, trim: true } }
   ],
   // Brands embedded
-  brands: [
-    { name: { type: String, required: true, trim: true } }
-  ]
+  // brands: [
+  //   { name: { type: String, required: true, trim: true } }
+  // ]
 }, { timestamps: true });
 
 const Product = mongoose.model("Product", ProductSchema);

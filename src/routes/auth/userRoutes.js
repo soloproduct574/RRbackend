@@ -1,12 +1,15 @@
 import express from "express";
-import { registerUser, loginUser , refreshAccessToken} from "../../controllers/auth/userControllerData.js";
-import { verifyJWT } from "../../midlewears/authMiddlewears.js";
+import { registerUser, loginUser , refreshAccessToken, getAllUsers, getUserById } from "../../controllers/auth/userControllerData.js";
 
 const authrouter = express.Router();
 
 // ✅ Public endpoints
-authrouter.post("/register", registerUser);   // will become /rr_traders/auth/register
-authrouter.post("/login", loginUser);           // will become /rr_traders/auth/login
-authrouter.post("/refresh-token", refreshAccessToken); // will become /rr_traders/auth/refresh-token
+authrouter.post("/register", registerUser);   
+authrouter.post("/login", loginUser);           
+authrouter.post("/refresh-token", refreshAccessToken); 
+
+// ✅ No JWT required for GET requests
+authrouter.get("/users", getAllUsers);   
+authrouter.get("/user/:id", getUserById); 
 
 export default authrouter;
