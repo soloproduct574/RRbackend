@@ -5,7 +5,7 @@ import adminrouter from './src/routes/auth/adminRoutes.js'
 import authAdminProductRoutes from './src/routes/auth/adminRoutesProduect.js'
 import mediaHandler from "./src/routes/productRoutes/productMediaHandleRoutes.js"
 import CategoriesAdd from "./src/routes/productRoutes/categoryRoutes.js"
-
+import paymentRoutes from "./src/routes/paymentmodes/paymentRoutes.js"
 
 const router = express.Router()
 
@@ -15,4 +15,5 @@ router.use("/auth/admin/", adminrouter)
 router.use("/auth/admin/protect",authAdminProductRoutes)
 router.use("/media",mediaHandler)
 router.use("/category",CategoriesAdd)
+router.use("/payment",paymentRoutes)
 export default router

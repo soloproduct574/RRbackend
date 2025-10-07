@@ -21,4 +21,5 @@ const storage = multer.diskStorage({
 export const mediaUploadFields = multer({ storage }).fields([
   { name: "bannerImage", maxCount: 5 },
   { name: "normalImage", maxCount: 5 },
+  { name: "photo", maxCount: 1 }, // payment photo
 ]);
