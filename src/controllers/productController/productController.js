@@ -7,33 +7,49 @@ console.log("Product Controller Loaded",uploadFileToR2);
  */
 export const createProduct = async (req, res) => {
   try {
-    const { product_name, description, original_price, offer_price, categories } = req.body;
+    const {
+      product_name,
+      description,
+      original_price,
+      offer_price,
+      categories,
+    } = req.body;
 
-    // Auto calculate discount
-    const percentage_discount = Math.round(((original_price - offer_price) / original_price) * 100);
+    const original = Number(original_price);
+    const offer = Number(offer_price);
+    const percentage_discount = Math.round(((original - offer) / original) * 100);
 
-    let images = [];
-    let videos = [];
+    const images = [];
+    const videos = [];
 
+    // ✅ multiple images
     if (req.files?.images) {
       for (const file of req.files.images) {
         const urls = await uploadFileToR2(file.path, file.mimetype);
-        images.push(...urls);
+        Array.isArray(urls) ? images.push(...urls) : images.push(urls);
       }
     }
 
-    if (req.files?.videos) {
-      for (const file of req.files.videos) {
+    // ✅ single video (singular)
+    if (req.files?.video) {
+      for (const file of req.files.video) {
         const urls = await uploadFileToR2(file.path, file.mimetype);
-        videos.push(...urls);
+        Array.isArray(urls) ? videos.push(...urls) : videos.push(urls);
       }
+    }
+
+    let parsedCategories = [];
+    try {
+      parsedCategories = JSON.parse(categories || "[]");
+    } catch {
+      parsedCategories = [];
     }
 
     const product = await Product.create({
       product_name,
       description,
-      original_price,
-      offer_price,
+      original_price: original,
+      offer_price: offer,
       percentage_discount,
       product_images: images,
       product_videos: videos,
@@ -41,12 +57,12 @@ export const createProduct = async (req, res) => {
     });
 
     res.status(201).json({ success: true, product });
-
   } catch (err) {
-    console.error("❌ Create error", err);
+    console.error("❌ Create Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 /**
  * GET all or single product
