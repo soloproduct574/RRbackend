@@ -1,17 +1,29 @@
 import express from "express";
-import path from "path";
-import { mediaUploadFields } from "../../midlewears/multer.js";
-import { createPayment, getPayments, getPaymentById } from "../../controllers/paymentmodes/payment.js";
+import multer from "multer";
+
+import {
+  createPayment,
+  getPayments,
+  getPaymentById,
+  updateOrderStatus,
+  getOrderStats,
+  deleteOrder,
+} from "../../controllers/paymentmodes/payment.js";
 
 const router = express.Router();
 
-// Create a new payment (with photo upload)
-router.post("/create", mediaUploadFields, createPayment);
+const upload = multer({dest:"uploads/"});
 
-// Get all payments
+// ✅ Post route: normalize path before saving
+router.post("/create", upload.single("photo"), createPayment);
+
+// Other routes
 router.get("/", getPayments);
-
-// Get a payment by ID
+router.get("/stats", getOrderStats);
 router.get("/:id", getPaymentById);
+router.put("/:id/status", updateOrderStatus);
+router.delete("/:id", deleteOrder);
+
+
 
 export default router;
