@@ -22,7 +22,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://r-rfrontend.vercel.app",
-  "https://keen-croquembouche-85becc.netlify.app"
+  "https://68e8b696cb15330835fd90c2--keen-croquembouche-85becc.netlify.app"
 ];
 
 // ---------- MIDDLEWARE ----------
