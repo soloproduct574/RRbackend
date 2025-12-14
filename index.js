@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:5173",
   "https://r-rfrontend.vercel.app",
   "https://68e8b696cb15330835fd90c2--keen-croquembouche-85becc.netlify.app"
 ];
